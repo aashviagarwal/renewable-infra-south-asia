@@ -1,0 +1,390 @@
+---
+title: "Evaluating South Asia's Renewable Infrastructure"
+author: "Aashvi Agarwal"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+  beamer_presentation: default
+---
+
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# Importing pre-processed dataframes saved as CSVs
+library(readr)
+library(tidyverse)
+library(plotly)
+library(maps)
+library(mapdata)
+
+rise_visual         <- read.csv("rise_visual.csv")
+compare_solar_fuel  <- read.csv("compare_solar_fuel.csv")
+india_policy_outcome <- read.csv("india_policy_outcome.csv")
+pak_policy_outcomes  <- read.csv("pak_policy_outcomes.csv")
+grid_bgd             <- read.csv("grid_bgd.csv")
+nep_policy_outcomes  <- read.csv("nep_policy_outcomes.csv")
+sl_policy_outcomes   <- read.csv("sl_policy_outcomes.csv")
+etpi_yearly          <- read.csv("etpi_yearly.csv")
+```
+
+## Introduction
+
+South Asia contains rapidly growing economies with rising energy demand.
+At the same time, these countries face pressure to reduce dependence on fossil fuels and transition toward sustainable energy systems.
+
+This project compares five countries:
+
+- India
+- Pakistan
+- Bangladesh
+- Nepal
+- Sri Lanka
+
+---
+
+## Aim of the Project
+
+This project asks:
+
+1. Which countries are making the strongest progress toward sustainable energy?
+2. Do policy improvements translate into real-world energy transition?
+3. How do fuel dependence and renewable adoption compare across countries?
+4. Can we build a broader metric of transition readiness?
+
+---
+
+## Datasets Used
+
+**1. World Bank RISE Dataset**
+Measures how supportive national policies are toward sustainable energy — 27 indicators grouped into 6 subcategories.
+
+**2. World Bank Fuel Imports Dataset**
+Fuel imports as a percentage of total merchandise imports.
+
+**3. Our World in Data Solar Dataset**
+Tracks solar energy consumption in TWh over time.
+
+> We examine this from the angle of solar energy adoption, acknowledging that countries like Nepal and Sri Lanka have untapped potential in hydro and wind that falls outside this analysis.
+
+---
+
+## Why South Asia?
+
+These countries share several characteristics:
+
+- High population growth and rising electricity demand
+- Import dependence for fossil fuels — LPG, CNG, coal and petroleum products
+- Exposure to climate risk — floods, droughts, sea level rise
+- Uneven economic development and political stability
+- All five committed to renewable energy targets under the Paris Agreement (2015)
+
+This makes South Asia a useful region for comparing energy transition pathways.
+
+---
+
+## Initial Exploration: Policy Scores
+
+```{r warning=FALSE, message=FALSE}
+ggplot(rise_visual, aes(x = year, y = score, color = country)) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "Energy Efficiency Governance Scores Over Time",
+    subtitle = "South Asian oil-importing countries, 2010–2023",
+    x = "Year",
+    y = "RISE Score",
+    color = "Country"
+  ) +
+  theme_minimal()
+```
+
+India shows the strongest upward trend. Pakistan and Sri Lanka improve unevenly. Bangladesh and Nepal improve gradually but consistently.
+
+---
+
+## What Happened in 2016?
+
+```{r warning=FALSE, message=FALSE}
+ggplot(compare_solar_fuel, aes(x = year)) +
+  geom_smooth(aes(y = solar_energy_consumption_terawatt, color = country), se = FALSE) +
+  geom_point(aes(y = fuel_imports_pct, color = country)) +
+  geom_vline(xintercept = 2016, linetype = "dashed", color = "grey50") +
+  annotate("text", x = 2016.2, y = Inf, label = "Paris Agreement",
+           vjust = 2, size = 3, color = "grey40") +
+  labs(
+    title = "Solar Growth Compared with Fuel Import Dependence",
+    subtitle = "Smooth lines = solar consumption (TWh) | Points = fuel imports (%)",
+    x = "Year",
+    y = "Solar Consumption / Fuel Imports %",
+    color = "Country"
+  ) +
+  theme_minimal()
+```
+
+Oil prices crashed from $115 (2013) to $30 (2016), reducing fuel import proportions. The Paris Agreement then accelerated solar adoption across all five countries post-2016.
+
+---
+
+## Country Analysis: India
+
+```{r warning=FALSE, message=FALSE}
+ggplot(india_policy_outcome,
+       aes(x = as.integer(year), y = indicator_score, color = sub_categories)) +
+  geom_smooth(se = FALSE) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    title = "India: Policy Category Scores Over Time",
+    x = "Year",
+    y = "Score (0-100)",
+    color = "Category"
+  ) +
+  theme_minimal()
+```
+
+Broad improvement across most categories. India is the strongest regional example of policy consistency. Despite high policy scores, solar share of total energy remains under 2%.. the energy mix is yet to follow.
+
+---
+
+## Country Analysis: Pakistan
+
+```{r warning=FALSE, message=FALSE}
+ggplot(pak_policy_outcomes,
+       aes(x = year, y = indicator_score, color = sub_categories)) +
+  geom_smooth(se = FALSE) +
+  geom_vline(xintercept = 2022, linetype = "dashed", color = "grey50") +
+  annotate("text", x = 2021.8, y = 85, label = "2022 Floods +\nPolitical Crisis",
+           size = 3, color = "grey40", hjust = 1) +
+  labs(
+    title = "Pakistan: Policy Category Scores Over Time",
+    x = "Year",
+    y = "Score (0-100)",
+    color = "Category"
+  ) +
+  theme_minimal()
+```
+
+Early progress in incentives and planning. Sharp decline in clean cooking after 2022 — devastating floods ($30B damage, 33M displaced) and political upheaval reset years of progress. **Countries can only transition when political climate is stable.**
+
+---
+
+## Pakistan: The Subsidy Trap
+
+High economic incentive scores are misleading, Financing Mechanisms for Energy Efficiency scores 0 throughout the entire period. All apparent progress comes from government subsidies, not private investment. This is fiscally unsustainable and crowds out private sector participation.
+
+---
+
+## Country Analysis: Bangladesh
+
+```{r warning=FALSE, message=FALSE}
+ggplot(grid_bgd, aes(x = year, y = score, color = INDICATOR_LABEL)) +
+  geom_smooth(se = FALSE) +
+  labs(
+    title = "Bangladesh: Grid Framework Indicators Over Time",
+    x = "Year",
+    y = "Score (0-100)",
+    color = "Indicator"
+  ) +
+  theme_minimal()
+```
+
+Bangladesh built one of the world's largest off-grid solar programs with 6 million+ solar home systems. The Off-Grid Systems Framework score reflects this. Biomass and biogas from rice husks and agricultural waste also play a significant role that solar TWh data cannot capture.
+
+---
+
+## Country Analysis: Nepal
+
+```{r warning=FALSE, message=FALSE}
+ggplot(nep_policy_outcomes,
+       aes(x = year, y = indicator_score, color = sub_categories)) +
+  geom_smooth(se = FALSE) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    title = "Nepal: Policy Category Scores Over Time",
+    x = "Year",
+    y = "Score (0-100)",
+    color = "Category"
+  ) +
+  theme_minimal()
+```
+
+Strong clean cooking and grid scores despite near-zero solar consumption. **Nepal has 83,000 MW of hydropower potential** — our solar dataset cannot capture this. The discrepancy between high grid scores and low solar TWh is itself the finding.
+
+---
+
+## Country Analysis: Sri Lanka
+
+```{r warning=FALSE, message=FALSE}
+ggplot(sl_policy_outcomes,
+       aes(x = year, y = indicator_score, color = sub_categories)) +
+  geom_smooth(se = FALSE) +
+  coord_cartesian(ylim = c(0, 100)) +
+  geom_vline(xintercept = 2022, linetype = "dashed", color = "grey50") +
+  annotate("text", x = 2021.8, y = 95, label = "Economic Collapse",
+           size = 3, color = "grey40", hjust = 1) +
+  labs(
+    title = "Sri Lanka: Policy Category Scores Over Time",
+    x = "Year",
+    y = "Score (0-100)",
+    color = "Category"
+  ) +
+  theme_minimal()
+```
+
+Strong grid progress before decline in 2022. Sri Lanka's complete economic collapse — no foreign reserves, 13-hour power cuts, fuel queues for days — is largely invisible in our proportional fuel imports metric. **This is a key limitation: our data cannot always capture times of crisis.**
+
+---
+
+## Limitations of the Analysis
+
+- Fuel imports are **proportional** — when all imports collapse equally, the ratio stays the same. Sri Lanka's 2022 crisis is invisible in this metric.
+- Solar data captures **utility-scale adoption only** — Bangladesh's off-grid systems and Nepal's hydropower are understated.
+- Policy scores measure **regulatory frameworks**, not implementation quality. Nepal's planning scores jumped 93 points while implementation barely moved.
+- External shocks like floods, recessions and political instability  can distort long-term trends in ways the data cannot fully explain.
+
+---
+
+## Above and Beyond: India Solar Potential Map
+
+```{r warning=FALSE, message=FALSE}
+# BEGIN AI ASSISTED CODE ******************************************************************
+# Source: Pareek et al. (2024), Solar Energy Advances 4, 100052
+# https://doi.org/10.1016/j.seja.2024.100052
+
+india_solar <- data.frame(
+  state = c("Andhra Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi",
+            "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+            "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+            "Meghalaya", "Odisha", "Punjab", "Rajasthan", "Tamil Nadu",
+            "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal"),
+  long = c(79.7, 92.9, 85.3, 81.9, 77.1, 74.1, 71.5, 76.1, 77.2, 85.3,
+           75.7, 76.2, 78.6, 75.7, 93.9, 91.4, 85.1, 75.3, 74.2, 78.7,
+           79.0, 80.9, 79.3, 87.9),
+  lat  = c(15.9, 26.2, 25.1, 21.3, 28.6, 15.3, 22.3, 29.1, 31.1, 23.6,
+           15.3, 10.8, 22.9, 19.7, 24.7, 25.5, 20.9, 31.1, 27.0, 11.1,
+           17.4, 26.8, 30.1, 22.9),
+  GHI = c(1796, 1454, 1600, 1745, 1741, 1573, 1797, 1663, 1520, 1752,
+          1809, 1866, 1798, 1736, 1580, 1371, 1654, 1683, 1854, 1725,
+          1814, 1662, 1537, 1491)
+)
+
+india_outline <- map_data("worldHires", region = "India")
+
+ggplot() +
+  geom_polygon(data = india_outline,
+               aes(x = long, y = lat, group = group),
+               fill = "grey90", color = "white", linewidth = 0.3) +
+  geom_point(data = india_solar,
+             aes(x = long, y = lat, size = GHI, color = GHI),
+             alpha = 0.8) +
+  scale_color_gradient(low = "#fff7bc", high = "#d95f0e",
+                       name = "GHI\n(kWh/m²/year)") +
+  scale_size_continuous(range = c(3, 10), name = "GHI\n(kWh/m²/year)") +
+  guides(size = "none") +
+  coord_fixed(1.3) +
+  labs(
+    title = "Solar Energy Potential Across Indian States",
+    subtitle = "Bubble size and color = Total Annual GHI — higher = more solar potential",
+    caption = "Source: Pareek et al. (2024), Solar Energy Advances 4, 100052"
+  ) +
+  theme_void() +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 10))
+# END AI ASSISTED CODE *********************************************************************
+```
+
+Rajasthan, Karnataka, and Kerala show the highest solar potential. Meghalaya and northeastern states show the lowest. Solar policy must be **regionally differentiated**, since a national target treats very different geographies as equivalent.
+
+---
+
+## Above and Beyond: Nepal Hydropower Potential Map
+
+```{r warning=FALSE, message=FALSE}
+# BEGIN AI ASSISTED CODE ******************************************************************
+# Source: Water and Energy Commission Secretariat (WECS), Nepal Outlook
+# https://nepaloutlook.com/energy/
+
+nepal_hydro <- data.frame(
+  province = c("Koshi", "Madhesh", "Bagmati", "Gandaki",
+               "Lumbini", "Karnali", "Sudurpashchim"),
+  potential_MW = c(22619, 275, 3500, 21000, 5000, 27000, 18149),
+  long = c(87.5, 86.0, 85.3, 84.0, 83.0, 82.5, 80.5),
+  lat  = c(27.5, 26.8, 27.7, 28.2, 27.8, 29.0, 29.2)
+)
+
+nepal_outline <- map_data("worldHires", region = "Nepal")
+
+ggplot() +
+  geom_polygon(data = nepal_outline,
+               aes(x = long, y = lat, group = group),
+               fill = "grey90", color = "white", linewidth = 0.3) +
+  geom_point(data = nepal_hydro,
+             aes(x = long, y = lat, size = potential_MW, color = potential_MW),
+             alpha = 0.8) +
+  geom_text(data = nepal_hydro,
+            aes(x = long, y = lat, label = province),
+            vjust = -1.2, size = 3) +
+  scale_color_gradient(low = "#c6dbef", high = "#084594",
+                       name = "Potential (MW)") +
+  scale_size_continuous(range = c(3, 15), name = "Potential (MW)") +
+  guides(size = "none") +
+  coord_fixed(1.3) +
+  labs(
+    title = "Hydropower Potential Across Nepal's Provinces",
+    subtitle = "Bubble size and color = estimated hydropower potential in MW",
+    caption = "Source: Water and Energy Commission Secretariat (WECS), Nepal Outlook"
+  ) +
+  theme_void() +
+  theme(plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 10))
+# END AI ASSISTED CODE *********************************************************************
+```
+
+Karnali (27,000 MW) and Koshi (22,619 MW) dominate Nepal's hydropower potential. Madhesh province has almost none (275 MW). This explains why Nepal's grid scores are high while solar TWh stays near zero! The renewable energy story here is written by rivers, not sunlight.
+
+---
+
+## Building a New Metric: ETPI
+
+**Energy Transition Preparedness Index** — four equally weighted pillars:
+
+| Pillar | Subcategories | What it captures |
+|---|---|---|
+| Top-Down (25%) | Renewables Policy + Economic Incentives | Government policy and financial frameworks |
+| Bottom-Up (25%) | Clean Cooking + Grid Framework | Household and community level adoption |
+| Implementation (25%) | Household & Efficiency | Depth of real-world application |
+| Import Dependency (25%) | 100 − Fuel Import % | Actual fossil fuel reliance |
+
+> ETPI = simple average of four pillars. Fuel score = 100 − fuel_imports_pct. Lower dependency → higher score.
+
+---
+
+## ETPI Results
+
+```{r warning=FALSE, message=FALSE}
+etpi_plot <- ggplot(etpi_yearly, aes(x = year, y = ETPI, color = country)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.5) +
+  labs(
+    title = "Energy Transition Preparedness Index (ETPI) Over Time\nSouth Asian countries, 2010–2023",
+    x = "Year", y = "ETPI Score (0-100)", color = "Country"
+  ) +
+  theme_minimal()
+
+ggplotly(etpi_plot)
+```
+
+India ranks highest in strong policy framework and economic resilience. Nepal shows consistent growth driven by hydropower infrastructure. Sri Lanka slowed post-recession but has recovery potential. Pakistan shows dedication but volatility from external shocks. Bangladesh improves steadily despite data gaps.
+
+---
+
+## Final Conclusions
+
+South Asia's energy transition is underway, but progress is fragile and uneven.
+
+- **The policy-implementation gap is visible** - strong legislation rarely translates directly to ground-level change
+- **2022 was devastating for the region** — floods, economic collapse, and political crisis unraveled years of progress across multiple countries
+- **Solar is only part of the story** — Nepal and Bangladesh rely on hydro and biomass respectively; our solar dataset understates their renewable reality
+- **The biggest barrier is resilience** — not technology or ambition, but the ability to sustain progress through compounding political, economic, and climate crises
+
+---
+
+## Thank You
